@@ -1,0 +1,8 @@
+_pycache_/
+*.pyc
+bookings.db
+booking_app.py
+test_db.py
+receipts/
+bookings_export.csv
+.venv/
