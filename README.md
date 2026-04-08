@@ -1,120 +1,65 @@
-🚀 Pelamin Garden Booking System (CLI Version)
+# Booking Management System
 
-📌 Project Overview
+A web-based booking management system built to replace manual processes for a small business (pelamin garden homestay).
 
-A modular Python CLI-based booking management system built for a real-world homestay and event venue business.
+## 🚀 Features
 
-This system automates:
-	•	Booking management
-	•	Event blocking rules
-	•	Homestay room capacity validation
-	•	Receipt generation
-	•	Payment tracking & updates
-	•	Monthly revenue reporting
-	•	CSV export
+- Check availability based on business rules
+- Create booking (event / homestay)
+- Prevent booking conflicts
+- Update payment (partial / full)
+- Automatically calculate balance and status
+- Generate PDF receipt
+- Delete booking
+- Simple dashboard to manage bookings
 
-Built with Python and SQLite following clean modular architecture.
+## 🧠 Key Concepts
 
-_____________________________________________________________________________________________
+- REST API design
+- Layered architecture (API, Service, Repository)
+- Business logic handling (booking conflicts, capacity rules)
+- Data validation and error handling
+- Frontend integration using Flask templates
 
-🎯 Real Business Problems Solved
+## ⚙️ Tech Stack
 
-Previously, bookings were:
-	•	Tracked manually via WhatsApp
-	•	Managed via Word receipts
-	•	Monitored via bank history
-	•	No clear monthly profit overview
+- Python (Flask)
+- SQLite
+- HTML (Jinja templates)
+- ReportLab (PDF generation)
 
-This system provides:
-	•	Centralised booking database
-	•	Conflict detection (event blocks homestay)
-	•	Automated receipt generation
-	•	Real-time payment balance tracking
-	•	Business summary & monthly revenue report
+## 📌 Business Logic Highlights
 
-_____________________________________________________________________________________________
+- Event bookings block all other bookings on selected dates
+- Homestay bookings are limited by room capacity
+- Prevents overbooking using conflict checking
+- Payment system supports partial and full payments
 
-🧠 Key Features
+## 💡 Purpose
 
-🏠 Booking Logic
-	•	Supports homestay and event types
-	•	Event bookings block entire date range
-	•	Homestay bookings enforce 5-room capacity rule
-	•	Date overlap validation
+This system was developed to replace manual workflows such as:
+- Tracking bookings via WhatsApp
+- Creating receipts manually using Word
+- Manually tracking payments
 
-💰 Payment Management
-	•	Track total amount & amount paid
-	•	Auto-calculate balance
-	•	Payment status: Unpaid / Partial / Paid
-	•	Payment update flow
+It helps streamline operations and reduce human error.
 
-🧾 Receipt Generation
-	•	Auto-generate TXT receipt on booking creation
-	•	Option to regenerate after payment update
-	•	Dynamic receipt number format:
-        PG-YYYYMMDD-XXXX
+## ▶️ How to Run
 
-📊 Reporting
-	•	Total customer count
-	•	Total revenue
-	•	Monthly revenue aggregation
-	•	CSV export
+1. Clone the repository
+2. Install dependencies
+3. Run the Flask app:
 
-_____________________________________________________________________________________________
+```bash
+python app.py
 
-🛠 Tech Stack
-	•	Python 3
-	•	SQLite
-	•	CLI-based interaction
-	•	Modular architecture
-	•	Git version control
+4. Open in browser:
 
-_____________________________________________________________________________________________
-
-🧩 Project Structure
-venue-system/
-│
-├── app_cli.py
-├── db.py
-├── bookings.py
-├── payments.py
-├── receipts.py
-├── reports.py
-├── services.py
-├── bookings.db (ignored)
-├── receipts/ (ignored)
-└── README.md
-
-_____________________________________________________________________________________________
-
-🧱 Architecture
-	•	db.py → Database connection logic
-	•	bookings.py → Booking rules & validation
-	•	payments.py → Payment updates
-	•	receipts.py → Receipt generation
-	•	services.py → Shared logic
-	•	reports.py → Business reporting
-	•	app_cli.py → User interface
-
-Follows separation of concerns principle.
-
-_____________________________________________________________________________________________
-
-▶️ How To Run
-python app_cli.py
-
-_____________________________________________________________________________________________
+http://127.0.0.1:5000/
 
 📈 Future Improvements
-	•	Flask REST API version
-	•	Web UI dashboard
-	•	Authentication & user roles
-	•	Cloud deployment
-	•	Automated testing (unit tests)
-	•	Payment integration
+	•	Improve UI/UX design
+	•	Deploy system online
+	•	Add authentication/login system
+	
 
-_____________________________________________________________________________________________
-
-👩‍💻 About Me
-
-This project was built as part of my journey to strengthen backend engineering, system design, and real-world business automation skills.
