@@ -58,8 +58,9 @@ python app.py
 http://127.0.0.1:5000/
 
 ## 📈 Future Improvements
-	•	Improve UI/UX design
-	•	Deploy system online
-	•	Add authentication/login system
+
+1. Improve UI/UX design
+2. Deploy system online
+3. Add authentication/login system
 	
 
