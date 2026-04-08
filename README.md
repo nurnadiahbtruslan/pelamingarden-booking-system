@@ -52,12 +52,12 @@ It helps streamline operations and reduce human error.
 
 ```bash
 python app.py
-
+```
 4. Open in browser:
 
 http://127.0.0.1:5000/
 
-📈 Future Improvements
+## 📈 Future Improvements
 	•	Improve UI/UX design
 	•	Deploy system online
 	•	Add authentication/login system
