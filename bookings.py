@@ -1,6 +1,6 @@
 # bookings.py
-from db import connect_db, fetch_one, execute
-from services import generate_receipt_txt_for_id, view_bookings, calc_payment_status
+from db import connect_db, fetch_one, execute, fetch_all_bookings, fetch_total_revenue, insert_booking, get_overlapping_bookings, update_payment_db, get_booking_by_id, delete_booking_db
+from services import generate_receipt_txt_for_id, view_bookings, calc_payment_status, generate_receipt_pdf
 
 # bookings.py
 from db import fetch_one
@@ -63,62 +63,6 @@ def validate_booking(start_date, end_date, event_type, rooms_needed=0):
         return True, f"✅ AVAILABLE: {available - rooms_needed} rooms left after booking."
 
     return False, "❌ Invalid booking type."
-
-# def has_event_conflict(req_start, req_end):
-#     conn = connect_db()
-#     cur = conn.cursor()
-#     cur.execute("""
-#         SELECT id, customer_name, start_date, end_date
-#         FROM bookings
-#         WHERE lower(event_type) = 'event'
-#           AND start_date <= ? AND end_date >= ?
-#     """, (req_end, req_start))
-#     row = cur.fetchone()
-#     conn.close()
-#     return row  # None if no conflict
-
-# def used_homestay_rooms(req_start, req_end):
-#     conn = connect_db()
-#     cur = conn.cursor()
-#     cur.execute("""
-#         SELECT COALESCE(SUM(rooms), 0)
-#         FROM bookings
-#         WHERE lower(event_type) = 'homestay'
-#           AND start_date <= ? AND end_date >= ?
-#     """, (req_end, req_start))
-#     total = cur.fetchone()[0]
-#     conn.close()
-#     return total
-
-# def validate_booking(start_date, end_date, event_type, rooms_needed=0):
-#     # Rule 1: If an event already exists, block everything
-#     event = has_event_conflict(start_date, end_date)
-#     if event:
-#         return False, f"❌ Event already blocks these dates (Booking ID {event[0]})."
-
-#     # Rule 2: If booking an event, it cannot overlap ANY booking
-#     if event_type == "event":
-#         conn = connect_db()
-#         cur = conn.cursor()
-#         cur.execute("""
-#             SELECT id FROM bookings
-#             WHERE start_date <= ? AND end_date >= ?
-#         """, (end_date, start_date))
-#         conflict = cur.fetchone()
-#         conn.close()
-
-#         if conflict:
-#             return False, "❌ Cannot add event: dates already have bookings."
-#         return True, "✅ Event booking allowed."
-
-#     # Rule 3: Homestay room capacity
-#     if event_type == "homestay":
-#         used = used_homestay_rooms(start_date, end_date)
-#         if used + rooms_needed > 5:
-#             return False, f"❌ Not enough rooms. Used={used}, Requested={rooms_needed}, Max=5."
-#         return True, f"✅ Homestay booking allowed. Rooms left: {5 - (used + rooms_needed)}."
-
-#     return False, "❌ Invalid booking type."
 
 def add_booking():
     print("\nAdd New Booking")
@@ -192,53 +136,6 @@ def add_booking():
         print(f"✅ Receipt auto-generated: {filename}\n")
 
 
-# def add_booking():
-#     print("\nAdd New Booking")
-#     name = input("Customer name: ")
-#     phone = input("Phone number: ")
-#     start_date = input("Start date (YYYY-MM-DD): ")
-#     end_date = input("End date (YYYY-MM-DD): ")
-#     event_type = input("Event type (homestay/event): ").strip().lower()
-
-#     event_name = None
-#     rooms = 0
-
-#     if event_type == "event":
-#         event_name = input("Event name (Wedding/Birthday/etc): ").strip()
-#         rooms = int(input("Number of rooms (1-5): "))
-#     elif event_type == "homestay":
-#         rooms = int(input("Number of rooms (1-5): "))
-#     else:
-#         print("Invalid booking type.")
-#         return
-
-#     ok, message = validate_booking(start_date, end_date, event_type, rooms)
-#     if not ok:
-#         print("\n" + message + "\n")
-#         return
-
-#     total_amount = float(input("Total amount (RM): "))
-#     amount_paid = float(input("Amount paid (RM): "))
-#     payment_method = input("Payment method (Cash/Transfer/Online): ")
-
-#     status = calc_payment_status(total_amount, amount_paid)
-
-#     conn = connect_db()
-#     cursor = conn.cursor()
-#     cursor.execute("""
-#     INSERT INTO bookings (customer_name, phone, start_date, end_date, event_type, event_name, rooms, total_amount, amount_paid, payment_method)
-#     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-#     """, (name, phone, start_date, end_date, event_type, event_name, rooms, total_amount, amount_paid, payment_method))
-#     new_booking_id = cursor.lastrowid
-#     conn.commit()
-#     conn.close()
-
-#     balance = total_amount - amount_paid
-#     filename = generate_receipt_txt_for_id(new_booking_id)
-#     if filename:
-#         print(f"\nBooking added! Status: {status}, Balance: RM {balance}")
-#         print(f"✅ Receipt auto-generated: {filename}\n")
-
 def search_by_date():
     date = input("\nEnter date to search (YYYY-MM-DD): ")
 
@@ -289,3 +186,217 @@ def check_availability():
 
     ok, message = validate_booking(req_start, req_end, req_type, rooms_needed)
     print("\n" + message + "\n")
+
+
+def get_all_bookings():
+    rows = fetch_all_bookings()
+
+    bookings = []
+
+    for row in rows:
+        booking_id, name, phone, start, end, event_type, event_name, rooms, total, paid = row
+
+        total = total or 0
+        paid = paid or 0
+        status = calc_payment_status(total, paid)
+
+        bookings.append({
+            "id": booking_id,
+            "name": name,
+            "phone": phone,
+            "start": start,
+            "end": end,
+            "type": event_type,
+            "ename": event_name,
+            "rooms": rooms,
+            "total": total,
+            "paid": paid,
+            "balance": total - paid,
+            "status": status
+        })
+
+    bookings.sort(key=lambda b: b["start"])
+
+    return bookings
+
+def get_booking_by_id_service(booking_id):
+    booking = get_booking_by_id(booking_id)
+    if not booking:
+        return {"error": "Booking not found"}, 404
+    
+    paid = booking["amount_paid"]
+    total = booking["total_amount"]
+    balance = total - paid
+    status = calc_payment_status(total, paid)
+
+    booking["balance"] = balance
+    booking["status"] = status
+    
+    return booking, 200
+
+def get_business_summary():
+    total_revenue = fetch_total_revenue()
+    return {
+        "total_revenue": total_revenue
+    }
+
+MAX_ROOMS = 5
+
+def check_availability(data):
+    existing = get_overlapping_bookings(
+        data["start_date"],
+        data["end_date"]
+    )
+
+    new_type = data["event_type"]
+    rooms = data["rooms"]
+
+    #rule 1: event cannot overlap anything
+    if new_type == "event" and existing:
+        return False, "Event booking cannot overlap", 0
+    
+    #rule 2: existing event blocks everything
+    for e in existing:
+        if e[0] == "event":
+            return False, "Date blocked by event", 0
+
+    #rule 3: homestay capacity
+    if new_type == "homestay":
+        total_booked = 0
+
+        for e in existing:
+            if e[0] == "homestay":
+                total_booked += e[1]
+
+        rooms_available = MAX_ROOMS - total_booked
+
+        if rooms_available <= 0:
+            return False, f"{rooms_available} rooms available", 0
+        
+        if rooms > MAX_ROOMS:
+            return False, f"Rooms cannot exceed {MAX_ROOMS}", 0
+        
+        if rooms > rooms_available:
+            return False, f"{rooms_available} rooms available", 0
+
+        return True, f"{rooms_available} Rooms available", rooms_available
+
+    return True, "Available", 0 
+
+def check_availability_service(data):
+    available, message, rooms_available = check_availability(data)
+
+    return{
+        "available": available,
+        "message": message,
+        "rooms_available": rooms_available
+    }, 200
+
+def create_booking_service(data):
+
+    data["event_type"] = data["event_type"].strip().lower()
+
+    required_fields = [
+        "customer_name",
+        "event_type",
+        "start_date",
+        "end_date",
+        "total_amount",
+        "amount_paid"
+    ]
+
+    for field in required_fields:
+        if field not in data:
+            return {"error": f"{field} is required"}, 400
+
+    if data["event_type"] not in ["event", "homestay"]:
+        return {"error": "Invalid event type"}, 400
+    
+    if data["start_date"] > data["end_date"]:
+        return {"error": "Invalid date range"}, 400
+
+    available, message, _ = check_availability(data)
+    if not available:
+        return {"error": message}, 409
+
+    paid = float(data.get("amount_paid", 0))
+    total = float(data.get("total_amount",0))
+    
+    data["status"] = calc_payment_status(total, paid)
+    data["balance"] = total - paid
+
+    insert_booking(data)
+
+    return {
+        "message": "Booking created successfully",
+        "balance": data["balance"],
+        "status": data["status"]
+    }, 201
+
+def update_payment_service(booking_id, amount):
+    
+    booking = get_booking_by_id(booking_id)
+
+    if not booking:
+        return {"error": "Booking not found"}, 404
+    
+    current_paid = booking["amount_paid"]
+    total = booking["total_amount"]
+    new_payment = amount
+
+    if new_payment <=0:
+        return {"error": "Invalid payment amount"}, 400
+
+    updated_paid = current_paid + new_payment
+    balance = total - updated_paid
+
+    status = calc_payment_status(total, updated_paid)
+
+    update_payment_db(booking_id, updated_paid)
+
+    return {
+        "message": "Payment updated successfully",
+        "amount_paid": updated_paid,
+        "balance": balance,
+        "status": status
+    }, 200
+
+
+def delete_booking_service(booking_id):
+    
+    booking = get_booking_by_id(booking_id)
+
+    if not booking:
+        return {"error": "Booking not found"}, 404
+    
+    delete_booking_db(booking_id)
+
+    return {"message": f"Successfully deleted booking id {booking_id}"}, 200
+
+
+def generate_receipt_sevice(booking_id):
+
+    booking = get_booking_by_id(booking_id)
+
+    if not booking:
+        return {"error": "Booking not found"}, 404
+    
+    paid = booking["amount_paid"]
+    total = booking["total_amount"]
+    balance = total - paid
+    status = calc_payment_status(total, paid)
+
+    booking["balance"] = balance
+    booking["status"] = status
+
+    file_name = generate_receipt_pdf(booking)
+
+    return file_name, 200
+
+
+#for testing only
+if __name__ == "__main__":
+    # result = get_all_bookings()
+    # print(result)
+    print(type((1)))
+    print(type((1,)))

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% if category == 'success' %}
+                <p style="color: green;">{{ message }}</p>
+            {% else %}
+                <p style="color: red;">{{ message }}</p>
+            {% endif %}      
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+<h2>Update Payment</h2>
+<h3>Booking ID: {{ booking.id }}</h3>
+<p>Customer: {{ booking.customer_name }}</p>
+<p>Balance: RM {{ booking.balance }}</p>
+<p>Status: {{ booking.status }}</p>
+<form method="POST">
+    Amount Paid:
+    <input type="number" name="amount_paid" required><br><br>
+
+    <button type="submit">Update</button>
+</form>
+</html>

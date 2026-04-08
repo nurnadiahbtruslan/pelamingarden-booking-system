@@ -1,0 +1,14 @@
+<h2>Availability Result</h2>
+
+{% if result.available %}
+  <p style="color: green;">
+    ✔ {{ result.message }}
+  </p>
+{% else %}
+  <p style="color: red;">
+    ❌ {{ result.message }}
+  </p>
+{% endif %}
+
+<br>
+<a href="/">Back to Dashboard</a>

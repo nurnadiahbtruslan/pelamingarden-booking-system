@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html>
+{% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+        {% for category, message in messages %}
+            {% if category == 'success' %}
+                <p style="color: green;">{{ message }}</p>
+            {% else %}
+                <p style="color: red;">{{ message }}</p>
+            {% endif %}      
+        {% endfor %}
+    {% endif %}
+{% endwith %}
+<h2>Pelamin Garden Bookings</h2>
+<a href="/create-booking">+ Create Booking</a>
+<h3>Check Availability</h3>
+
+<form method="GET" action="/availability-ui">
+  Start Date: <input type="date" name="start_date" required><br><br>
+  End Date: <input type="date" name="end_date" required><br><br>
+
+  Type:
+  <select name="event_type">
+    <option value="">---Select Type---</option>
+    <option value="event">Event</option>
+    <option value="homestay">Homestay</option>
+  </select><br><br>
+
+  Rooms: <input type="number" name="rooms"><br><br>
+
+  <button type="submit">Check</button>
+</form>
+<table border="1" cellpadding="10">
+    <tr>
+        <th>ID</th>
+        <th>Customer Name</th>
+        <th>Phone</th>
+        <th>Event Type</th>
+        <th>Event Name</th>
+        <th>Date</th>
+        <th>Rooms</th>
+        <th>Total</th>
+        <th>Amount Paid</th>
+        <th>Balance</th>
+        <th>Payment Status</th>
+        <th>Action</th>
+    </tr>
+
+    {% for b in bookings %}
+    <tr>
+        <td>{{ b.id }}</td>
+        <td>{{ b.name }}</td>
+        <td>{{ b.phone }}</td>
+        <td>{{ b.type }}</td>
+        <td>{{ b.ename }}</td>
+        <td>{{ b.start }} -> {{ b.end }}</td>
+        <td>{{ b.rooms }}</td>
+        <td>RM{{ b.total }}</td>
+        <td>RM{{ b.paid }}</td>
+        <td>RM{{ b.balance }}</td>
+        <td>
+            {% if b.status == "Paid" %}
+                <span style="color: green;">Paid</span>
+            {% elif b.status == "Partial" %}
+                <span style="color: orange;">Partial</span>
+            {% else %}
+                <span style="color: red;">Unpaid</span>   
+            {% endif %}
+        </td>
+        <td>
+            <a href="/bookings/{{ b.id }}/receipt">Download Receipt</a>
+            <a href="/bookings/{{ b.id }}/payment">Update Payment</a>
+            <a href="/bookings/{{ b.id }}/delete">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+</table>
+</html>
